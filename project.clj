@@ -1,7 +1,7 @@
-(defproject clj-pdf "2.1.0"
+(defproject org.clojars.eruez/clj-pdf "2.1.1-SNAPSHOT"
 
   :description "PDF generation library"
-  :url "https://github.com/yogthos/clj-pdf"
+  :url "https://github.com/eruez/clj-pdf"
 
   :license {:name         "GNU Lesser General Public License - v 3"
             :url          "http://www.gnu.org/licenses/lgpl.html"
