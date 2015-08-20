@@ -797,7 +797,7 @@
           (.setPageEvent pdf-writer page-event))
         (if footer
           (.setFooter doc
-            (doto (new HeaderFooter (new Phrase (str (:text footer) " ") (font {:size 10})) page-numbers?)
+            (doto (new HeaderFooter (new Phrase (str (:text footer) " ") (font (merge {:size 10} (:font footer)))) page-numbers?)
               (.setBorder 0)
               (.setAlignment (get-alignment (:align footer)))))))
 
