@@ -30,11 +30,10 @@
      Rectangle
      RectangleReadOnly
      RomanList
-     Section
      Table
      ZapfDingbatsList
      ZapfDingbatsNumberList]
-    [cljpdf.text.pdf BaseFont PdfContentByte PdfReader PdfStamper PdfWriter PdfPCell PdfPTable ]
+    [cljpdf.text.pdf BaseFont PdfReader PdfStamper PdfWriter PdfPCell PdfPTable ]
     [java.io PushbackReader InputStream InputStreamReader FileOutputStream ByteArrayOutputStream]))
 
 (declare ^:dynamic *cache*)
@@ -86,33 +85,35 @@
     family   :family
     ttf-name :ttf-name
     encoding :encoding}]
-    (FontFactory/getFont
-      (if-not (nil? ttf-name)
-        ttf-name
-        (condp = (when family (name family))
-          "courier"      FontFactory/COURIER
-          "helvetica"    FontFactory/HELVETICA
-          "times-roman"  FontFactory/TIMES_ROMAN
-          "symbol"       FontFactory/SYMBOL
-          "zapfdingbats" FontFactory/ZAPFDINGBATS
-          FontFactory/HELVETICA))
+  (FontFactory/getFont
+   (if-not (nil? ttf-name)
+     ttf-name
+     (condp = (when family (name family))
+       "courier"      FontFactory/COURIER
+       "helvetica"    FontFactory/HELVETICA
+       "times-roman"  FontFactory/TIMES_ROMAN
+       "symbol"       FontFactory/SYMBOL
+       "zapfdingbats" FontFactory/ZAPFDINGBATS
+       FontFactory/HELVETICA))
 
-      (case [(not (nil? ttf-name)) encoding]
-        [true :unicode] BaseFont/IDENTITY_H
-        [true :default] BaseFont/WINANSI
-        BaseFont/WINANSI)
+   (case [(not (nil? ttf-name))
+          (if (keyword? encoding) encoding :custom)]
+     [true :unicode] BaseFont/IDENTITY_H
+     [true :custom]  encoding
+     [true :default] BaseFont/WINANSI
+     BaseFont/WINANSI)
 
-      true
+   true
 
-      (float (or size 10))
-      (cond
-        styles (compute-font-style styles)
-        style (get-style style)
-        :else Font/NORMAL)
+   (float (or size 10))
+   (cond
+    styles (compute-font-style styles)
+    style (get-style style)
+    :else Font/NORMAL)
 
-      (if (and r g b)
-        (new Color r g b)
-        (new Color 0 0 0))))
+   (if (and r g b)
+     (new Color r g b)
+     (new Color 0 0 0))))
 
 (defn- custom-page-size [width height]
   (RectangleReadOnly. width height))
@@ -194,9 +195,9 @@
     (into [:paragraph (merge meta (merge {:size 18 :style :bold} (:style meta)))] content)))
 
 
-(defn- paragraph [meta & content]
-  (let [paragraph (new Paragraph)
-        {:keys [first-line-indent indent keep-together leading align]} meta]
+(defn- paragraph [{:keys [first-line-indent indent keep-together leading align] :as meta}
+                  & content]
+  (let [paragraph (new Paragraph)]
 
     (.setFont paragraph (font meta))
     (if keep-together (.setKeepTogether paragraph true))
@@ -281,8 +282,6 @@
         {:top Cell/TOP :bottom Cell/BOTTOM :left Cell/LEFT :right Cell/RIGHT}
         borders))))
 
-
-
 (defn- cell [{:keys [background-color
                      colspan
                      rowspan
@@ -295,12 +294,12 @@
                      border-width-left
                      border-width-right
                      border-width-top] :as meta}
-             content]
+             & content]
 
-  (let [c (if (string? content) (new Cell (styled-item meta content)) (new Cell))
+  (let [c       (Cell.)
         [r g b] background-color]
 
-    (if (and r g b) (.setBackgroundColor c (new Color (int r) (int g) (int b))))
+    (if (and r g b) (.setBackgroundColor c (Color. (int r) (int g) (int b))))
     (when (not (nil? border))
       (.setBorder c (if border Rectangle/BOX Rectangle/NO_BORDER)))
 
@@ -313,8 +312,11 @@
     (if border-width-right (.setBorderWidthRight c  (float border-width-right)))
     (if border-width-top (.setBorderWidthTop c (float border-width-top)))
     (.setHorizontalAlignment c (get-alignment align))
-
-    (if (string? content) c (doto c (.addElement (make-section meta content))))))
+    (doseq [item (map
+                  #(make-section meta (if (string? %) [:chunk %] %))
+                  content)]
+      (.addElement c item))
+    c))
 
 
 (defn- pdf-cell-padding*
@@ -353,14 +355,14 @@
                          rotation
                          height
                          min-height] :as meta}
-                 content]
-  (let [c (if (string? content) (new PdfPCell (pdf-styled-item meta content)) (new PdfPCell))]
+                 & content]
+  (let [c (PdfPCell.)]
 
     (let [[r g b] background-color]
-      (if (and r g b) (.setBackgroundColor c (new Color (int r) (int g) (int b)))))
+      (if (and r g b) (.setBackgroundColor c (Color. (int r) (int g) (int b)))))
 
     (let [[r g b] border-color]
-      (if (and r g b) (.setBorderColor c (new Color (int r) (int g) (int b)))))
+      (if (and r g b) (.setBorderColor c (Color. (int r) (int g) (int b)))))
 
     (when (not (nil? border))
       (.setBorder c (if border Rectangle/BOX Rectangle/NO_BORDER)))
@@ -383,8 +385,11 @@
     (if min-height (.setMinimumHeight c (float min-height)))
     (.setHorizontalAlignment c (get-alignment align))
     (.setVerticalAlignment c (get-alignment valign))
-
-    (if (string? content) c (doto c (.addElement (make-section meta content))))))
+    (doseq [item (map
+                  #(make-section meta (if (string? %) [:paragraph %] %))
+                  content)]
+      (.addElement c item))
+    c))
 
 
 (defn- table-header [tbl header cols]

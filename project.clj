@@ -1,5 +1,4 @@
-(defproject org.clojars.eruez/clj-pdf "2.1.1-SNAPSHOT"
-
+(defproject org.clojars.eruez/clj-pdf "2.1.6.1"
   :description "PDF generation library"
   :url "https://github.com/eruez/clj-pdf"
 
@@ -12,7 +11,7 @@
                  [org.jfree/jfreechart "1.0.15"]
                  [org.apache.xmlgraphics/batik-gvt "1.7"]
                  [org.swinglabs/pdf-renderer "1.0.5"]]
-
+  :resource-paths ["src/java"]
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6"]

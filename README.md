@@ -363,6 +363,15 @@ The following example illustrates how to specify a custom font file such as Cyri
   "doc.pdf")
 ```
 
+Custom fonts can also be specified for any elements that support font metadata, such as phrases and paragraphs:
+
+```clojure
+[:paragraph
+   {:encoding "UniJIS-UCS2-H"
+    :ttf-name "HeiseiKakuGo-W5"}
+   "こんにちは世界"]
+```
+
 You could set `:ttf-name` as absolute or relative path to the font file. It will also load fonts from classpath resources by default.
 
 ### Document sections
@@ -852,7 +861,7 @@ metadata:
 ```clojure
 [:table {:header ["Row 1" "Row 2" "Row 3"] :width 50 :border false :cell-border false}
   [[:cell {:colspan 2} "Foo"] "Bar"]
-  ["foo1" "bar1" "baz1"]
+  [[:cell "foo1" " " "foo2"] "bar1" "baz1"]
   ["foo2" "bar2" "baz2"]]
 
 ;;header elements can set alignment
