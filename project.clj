@@ -1,4 +1,4 @@
-(defproject org.clojars.eruez/clj-pdf "2.1.6.1"
+(defproject org.clojars.eruez/clj-pdf "2.1.6.1-SNAPSHOT"
   :description "PDF generation library"
   :url "https://github.com/eruez/clj-pdf"
 
