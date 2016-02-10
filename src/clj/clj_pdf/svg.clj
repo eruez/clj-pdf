@@ -1,11 +1,11 @@
 (ns clj-pdf.svg
   (:use [clj-pdf.graphics-2d :only [with-graphics]])
   (:import [org.apache.batik.bridge BridgeContext DocumentLoader GVTBuilder UserAgentAdapter]
-           [org.apache.batik.dom.svg SAXSVGDocumentFactory]
+           [org.apache.batik.anim.dom SAXSVGDocumentFactory]
            [org.apache.batik.util XMLResourceDescriptor]
            [java.io Reader StringReader]))
 
-(defn- make-ctx []
+(defn- ^BridgeContext make-ctx []
   (let [user-agent (UserAgentAdapter.)
         loader     (DocumentLoader. user-agent)
         ctx        (BridgeContext. user-agent loader)]
@@ -19,6 +19,7 @@
 
 (defn render [meta svg-data]
   (let [factory  (SAXSVGDocumentFactory. (XMLResourceDescriptor/getXMLParserClassName))
-        document (.createSVGDocument factory nil (get-content svg-data))
+        ^String uri nil
+        document (.createSVGDocument factory uri (get-content svg-data))
         gfx-node (.build (GVTBuilder.) (make-ctx) document)]
     (with-graphics meta #(.paint gfx-node %))))
